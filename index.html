@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="https://unpkg.com/vuex"></script>
+  <style>
+      table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+          width: 100%;
+      }
+      
+      td, th {
+          border: 1px solid #dddddd;
+          text-align: left;
+          padding: 8px;
+      }
+      
+      tr:nth-child(even) {
+          background-color: #dddddd;
+      }
+  </style>
+</head>
+<body>
+  <div id="v-for-object">
+    <input v-model="newItem">
+    <button v-on:click="addItem">Add item</button>
+    <table v-if="object.length">
+        <tr>
+          <th>Index</th>
+          <th style="cursor: pointer;" v-on:click="sortbyName">Item</th>
+          <th style="cursor: pointer;" v-on:click="sortbyDate">Date</th>
+          <th>Time</th>
+          <th></th>
+        </tr>
+        <tr v-for="(value, index) in object">
+          <td> {{ index + 1 }}</td>
+          <td >{{ value.itemName }}</td>
+          <td>{{ value.date }}</td>
+          <td>{{ value.time }}</td>
+          <td><button v-on:click="removeItem(index)">Remove item</button></td>
+        </tr>
+    </table> 
+  </div>
+
+  <script>
+    var example1 = new Vue({
+      el: '#v-for-object',
+      data: {
+        newItem: '',
+        object: []
+      },
+      methods: {
+        addItem: function () {
+          var fullDate = new Date().toLocaleString();
+          return this.object.push({
+            itemName: this.newItem,
+            date: fullDate.substring(0, fullDate.indexOf(',')),
+            time: fullDate.split(',')[1]
+          })
+        },
+        removeItem: function (index) {
+          return this.object.splice(index, 1)
+        },
+        sortbyName: function() {
+          function compare(a, b) {
+            if (a.itemName < b.itemName)
+              return -1;
+            if (a.itemName > b.itemName)
+              return 1;
+            return 0;
+          }
+
+          return this.object.sort(compare);
+        },
+        sortbyDate: function() {
+          function compare(a, b) {
+            if (a.date < b.date)
+              return -1;
+            if (a.date > b.date)
+              return 1;
+            return 0;
+          }
+
+          return this.object.sort(compare);
+        }
+      },
+      computed: {
+        
+      }
+    })
+  </script>
+</body>
+</html>
