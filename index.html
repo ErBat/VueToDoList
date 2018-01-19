@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
-  <script src="https://unpkg.com/vuex"></script>
+  <script src="node_modules\vue\dist\vue.js"></script>
   <style>
       table {
           font-family: arial, sans-serif;
@@ -22,42 +21,64 @@
   </style>
 </head>
 <body>
-  <div id="v-for-object">
-    <input v-model="newItem">
-    <button v-on:click="addItem">Add item</button>
-    <table v-if="object.length">
-        <tr>
-          <th>Index</th>
-          <th style="cursor: pointer;" v-on:click="sortbyName">Item</th>
-          <th style="cursor: pointer;" v-on:click="sortbyDate">Date</th>
-          <th>Time</th>
-          <th></th>
-        </tr>
-        <tr v-for="(value, index) in object">
-          <td> {{ index + 1 }}</td>
-          <td >{{ value.itemName }}</td>
-          <td>{{ value.date }}</td>
-          <td>{{ value.time }}</td>
-          <td><button v-on:click="removeItem(index)">Remove item</button></td>
-        </tr>
-    </table> 
+  <div id="app">
   </div>
 
   <script>
-    var example1 = new Vue({
-      el: '#v-for-object',
-      data: {
-        newItem: '',
-        object: []
+    var retrievedObject = JSON.parse(localStorage.getItem('object'));
+
+    Vue.component('todo__input', {
+      template: `
+        <div>
+        <input v-model="inputVal">
+        <button v-on:click="addItem(inputVal)">Add item</button>
+        </div>
+        `,
+      data() {
+        return { inputVal: '' }
       },
       methods: {
-        addItem: function () {
+        addItem: function (inputVal) {
+          this.$emit('addItem', inputVal)
+        }
+      }
+    })
+
+    Vue.component('todo', {
+      template: `
+      <div>
+        <todo__input v-on:addItem="addItem"></todo__input>
+        <table v-if="object.length">
+            <tr>
+              <th>Index</th>
+              <th style="cursor: pointer;" v-on:click="sortbyName">Item</th>
+              <th style="cursor: pointer;" v-on:click="sortbyDate">Date</th>
+              <th>Time</th>
+              <th></th>
+            </tr>
+            <tr v-for="(value, index) in object">
+              <td>{{ index + 1 }}</td>
+              <td>{{ value.itemName }}</td>
+              <td>{{ value.date }}</td>
+              <td>{{ value.time }}</td>
+              <td><button v-on:click="removeItem(index)">Remove item</button></td>
+            </tr>
+        </table> 
+      </div>
+      `,
+      data: function () {
+        return{
+          object: []
+        }  
+      },
+      methods: {
+        addItem: function (value) {
           var fullDate = new Date().toLocaleString();
           return this.object.push({
-            itemName: this.newItem,
+            itemName: value,
             date: fullDate.substring(0, fullDate.indexOf(',')),
             time: fullDate.split(',')[1]
-          })
+          });
         },
         removeItem: function (index) {
           return this.object.splice(index, 1)
@@ -86,9 +107,17 @@
         }
       },
       computed: {
-        
+        storedObject: function () {
+           return localStorage.setItem('object', JSON.stringify(this.object));
+        }
       }
     })
+
+    var app = new Vue({
+      template: "<todo></todo>"
+    })
+
+    app.$mount('#app');
   </script>
 </body>
 </html>
