@@ -38,8 +38,58 @@
         return { inputVal: '' }
       },
       methods: {
-        addItem: function (inputVal) {
-          this.$emit('addItem', inputVal)
+        addItem: function (value) {
+          this.$emit('addItem', value)
+        }
+      }
+    })
+
+    Vue.component('todo__output', {
+      template: `
+        <table v-if="recievedArray.length">
+            <tr>
+              <th>Index</th>
+              <th style="cursor: pointer;" v-on:click="sortbyName">Item</th>
+              <th style="cursor: pointer;" v-on:click="sortbyDate">Date</th>
+              <th>Time</th>
+              <th></th>
+            </tr>
+            <tr v-for="(value, index) in recievedArray">
+              <td>{{ index + 1 }}</td>
+              <td>{{ value.itemName }}</td>
+              <td>{{ value.date }}</td>
+              <td>{{ value.time }}</td>
+              <td><button v-on:click="removeItem(index)">Remove item</button></td>
+            </tr>
+        </table> 
+      `,
+      props: {
+        recievedArray:[]
+        },
+      methods: {
+        sortbyName: function() {
+          function compare(a, b) {
+            if (a.itemName < b.itemName)
+              return -1;
+            if (a.itemName > b.itemName)
+              return 1;
+            return 0;
+          }
+
+          return this.recievedArray.sort(compare);
+        },
+        sortbyDate: function() {
+          function compare(a, b) {
+            if (a.date < b.date)
+              return -1;
+            if (a.date > b.date)
+              return 1;
+            return 0;
+          }
+          return this.recievedArray.sort(compare);
+        },
+        removeItem: function (index) {
+          return this.recievedArray.splice(index, 1)
         }
       }
     })
@@ -48,22 +98,7 @@
       template: `
       <div>
         <todo__input v-on:addItem="addItem"></todo__input>
-        <table v-if="object.length">
-            <tr>
-              <th>Index</th>
-              <th style="cursor: pointer;" v-on:click="sortbyName">Item</th>
-              <th style="cursor: pointer;" v-on:click="sortbyDate">Date</th>
-              <th>Time</th>
-              <th></th>
-            </tr>
-            <tr v-for="(value, index) in object">
-              <td>{{ index + 1 }}</td>
-              <td>{{ value.itemName }}</td>
-              <td>{{ value.date }}</td>
-              <td>{{ value.time }}</td>
-              <td><button v-on:click="removeItem(index)">Remove item</button></td>
-            </tr>
-        </table> 
+        <todo__output :recievedArray=this.object></todo__output>
       </div>
       `,
       data: function () {
@@ -79,31 +114,6 @@
             date: fullDate.substring(0, fullDate.indexOf(',')),
             time: fullDate.split(',')[1]
           });
-        },
-        removeItem: function (index) {
-          return this.object.splice(index, 1)
-        },
-        sortbyName: function() {
-          function compare(a, b) {
-            if (a.itemName < b.itemName)
-              return -1;
-            if (a.itemName > b.itemName)
-              return 1;
-            return 0;
-          }
-
-          return this.object.sort(compare);
-        },
-        sortbyDate: function() {
-          function compare(a, b) {
-            if (a.date < b.date)
-              return -1;
-            if (a.date > b.date)
-              return 1;
-            return 0;
-          }
-
-          return this.object.sort(compare);
         }
       },
       computed: {
