@@ -2,6 +2,8 @@
 <html>
 <head>
   <script src="node_modules\vue\dist\vue.js"></script>
+  <script src="node_modules\vuex\dist\vuex.js"></script>
+  
   <style>
       table {
           font-family: arial, sans-serif;
@@ -25,7 +27,21 @@
   </div>
 
   <script>
-    var retrievedObject = JSON.parse(localStorage.getItem('object'));
+    var STORAGE_KEY = 'todo-list';
+
+    var todoStorage = {
+      fetch: function () {
+        var todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+        todos.forEach(function (todo, index) {
+          todo.id = index
+        })
+        todoStorage.uid = todos.length
+        return todos
+      },
+      save: function (todos) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos))
+      }
+    }
 
     Vue.component('todo__input', {
       template: `
@@ -39,7 +55,7 @@
       },
       methods: {
         addItem: function (value) {
-          this.$emit('addItem', value)
+          store.commit('addItem', value)
         }
       }
     })
@@ -63,9 +79,11 @@
             </tr>
         </table> 
       `,
-      props: {
-        recievedArray:[]
-        },
+      computed: {
+        recievedArray () {
+          return store.state.objects;
+        }
+      },
       methods: {
         sortbyName: function() {
           function compare(a, b) {
@@ -89,7 +107,7 @@
           return this.recievedArray.sort(compare);
         },
         removeItem: function (index) {
-          return this.recievedArray.splice(index, 1)
+          store.commit('removeItem', index)
         }
       }
     })
@@ -97,33 +115,36 @@
     Vue.component('todo', {
       template: `
       <div>
-        <todo__input v-on:addItem="addItem"></todo__input>
-        <todo__output :recievedArray=this.object></todo__output>
+        <todo__input></todo__input>
+        <todo__output></todo__output>
       </div>
-      `,
-      data: function () {
-        return{
-          object: []
-        }  
+      `
+    })
+
+    const store = new Vuex.Store({
+      strict: true,
+      state: {
+        objects: todoStorage.fetch()
       },
-      methods: {
-        addItem: function (value) {
+      mutations: {
+        addItem: function (state, value) {
           var fullDate = new Date().toLocaleString();
-          return this.object.push({
+          state.objects.push({
             itemName: value,
             date: fullDate.substring(0, fullDate.indexOf(',')),
             time: fullDate.split(',')[1]
           });
-        }
-      },
-      computed: {
-        storedObject: function () {
-           return localStorage.setItem('object', JSON.stringify(this.object));
+          return todoStorage.save(state.objects);
+        },
+        removeItem: function (state, index) {
+          state.objects.splice(index, 1);
+          return todoStorage.save(state.objects);
         }
       }
     })
 
     var app = new Vue({
+      store,
       template: "<todo></todo>"
     })
 
