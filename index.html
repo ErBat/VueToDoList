@@ -43,6 +43,22 @@
       }
     }
 
+    var filters = {
+      all: function (todos) {
+        return todos
+      },
+      active: function (todos) {
+        return todos.filter(function (todo) {
+          return !todo.completed
+        })
+      },
+      completed: function (todos) {
+        return todos.filter(function (todo) {
+          return todo.completed
+        })
+      }
+    }
+
     Vue.component('todo__input', {
       template: `
         <div>
@@ -62,29 +78,61 @@
 
     Vue.component('todo__output', {
       template: `
-        <table v-if="recievedArray.length">
+      <div>
+        <ul class="filters">
+          <li><a href="#/all" :class="{ selected: visibility == 'all' }">All</a></li>
+          <li><a href="#/active" :class="{ selected: visibility == 'active' }">Active</a></li>
+          <li><a href="#/completed" :class="{ selected: visibility == 'completed' }">Completed</a></li>
+        </ul>
+        <table v-if="filteredTodos.length">
             <tr>
               <th>Index</th>
               <th style="cursor: pointer;" v-on:click="sortbyName">Item</th>
               <th style="cursor: pointer;" v-on:click="sortbyDate">Date</th>
               <th>Time</th>
+              <th>Completed</th>
               <th></th>
             </tr>
-            <tr v-for="(value, index) in recievedArray">
+            <tr v-for="(value, index) in filteredTodos">
               <td>{{ index + 1 }}</td>
               <td>{{ value.itemName }}</td>
               <td>{{ value.date }}</td>
               <td>{{ value.time }}</td>
+              <td><input class="toggle" type="checkbox" :checked="value.completed" @change="updateCompleted($event, index)"></td>
               <td><button v-on:click="removeItem(index)">Remove item</button></td>
             </tr>
         </table> 
+      </div>
       `,
+      data() {
+        return { 
+          visibility: store.state.visibility
+        }
+      },
       computed: {
-        recievedArray () {
-          return store.state.objects;
+        filteredTodos: function () {
+          return filters[store.state.visibility](store.state.objects)
+        },
+        remaining: function () {
+          return filters.active(this.todos).length
+        },
+        allDone: {
+          get: function () {
+            return this.remaining === 0
+          },
+          set: function (value) {
+            this.todos.forEach(function (todo) {
+              todo.completed = value
+            })
+          }
         }
       },
       methods: {
+        updateCompleted: function(event, index) {
+          console.log(event.target.checked);
+          var object = {checked: event.target.checked, index}
+          store.commit('updateCompleted', object)
+        },
         sortbyName: function() {
           function compare(a, b) {
             if (a.itemName < b.itemName)
@@ -124,15 +172,24 @@
     const store = new Vuex.Store({
       strict: true,
       state: {
-        objects: todoStorage.fetch()
+        objects: todoStorage.fetch(),
+        visibility: "all"
       },
       mutations: {
+        updateCompleted: function (state, object) {
+          console.log(object.checked);
+          return store.state.objects[object.index].completed = object.checked;
+        },
+        changeVisibility: function (state, value) {
+          return state.visibility = value;
+        },
         addItem: function (state, value) {
           var fullDate = new Date().toLocaleString();
           state.objects.push({
             itemName: value,
             date: fullDate.substring(0, fullDate.indexOf(',')),
-            time: fullDate.split(',')[1]
+            time: fullDate.split(',')[1],
+            completed: false
           });
           return todoStorage.save(state.objects);
         },
@@ -147,6 +204,19 @@
       store,
       template: "<todo></todo>"
     })
+
+    function onHashChange () {
+      var visibility = window.location.hash.replace(/#\/?/, '')
+      if (filters[visibility]) {
+        store.commit('changeVisibility', visibility)
+      } else {
+        window.location.hash = ''
+        store.commit('changeVisibility', 'all')
+      }
+    }
+
+    window.addEventListener('hashchange', onHashChange)
+    onHashChange()
 
     app.$mount('#app');
   </script>
