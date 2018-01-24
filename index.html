@@ -98,7 +98,7 @@
               <td>{{ value.itemName }}</td>
               <td>{{ value.date }}</td>
               <td>{{ value.time }}</td>
-              <td><input class="toggle" type="checkbox" :checked="value.completed" @change="updateCompleted($event, index)"></td>
+              <td><input class="toggle" type="checkbox" :checked="value.completed" @change="updateCompleted($event, value)"></td>
               <td><button v-on:click="removeItem(index)">Remove item</button></td>
             </tr>
         </table> 
@@ -128,9 +128,9 @@
         }
       },
       methods: {
-        updateCompleted: function(event, index) {
-          console.log(event.target.checked);
-          var object = {checked: event.target.checked, index}
+        updateCompleted: function(event, value) {
+          console.log(value);
+          var object = {checked: event.target.checked, value}
           store.commit('updateCompleted', object)
         },
         sortbyName: function() {
@@ -177,8 +177,8 @@
       },
       mutations: {
         updateCompleted: function (state, object) {
-          console.log(object.checked);
-          return store.state.objects[object.index].completed = object.checked;
+          console.log(object.value);
+          return object.value.completed = object.checked;
         },
         changeVisibility: function (state, value) {
           return state.visibility = value;
