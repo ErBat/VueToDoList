@@ -59,6 +59,51 @@
       }
     }
 
+    var sorterFunctions = {
+      sortByName: function(todos) {
+        function compare(a, b) {
+          if (a.itemName < b.itemName)
+            return -1;
+          if (a.itemName > b.itemName)
+            return 1;
+          return 0;
+        }
+        return todos.sort(compare);
+      },
+      sortByTime: function(todos) {
+        function compare(a, b) {
+          if (a.time < b.time)
+            return -1;
+          if (a.time > b.time)
+            return 1;
+          return 0;
+        }
+        return todos.sort(compare);
+      },
+      sortByDate: function(todos) {
+        function compare(a, b) {
+          if (a.date < b.date)
+            return -1;
+          if (a.date > b.date)
+            return 1;
+          return 0;
+        }
+        return todos.sort(compare);
+      },
+      sortByCompleted: function(todos) {
+        function compare(a, b) {
+          if (a.completed < b.completed)
+            return -1;
+          if (a.completed > b.completed)
+            return 1;
+          return 0;
+        }
+        return todos.sort(compare);
+      }
+    }
+
+    
+
     Vue.component('todo__input', {
       template: `
         <div>
@@ -90,7 +135,7 @@
               <th style="cursor: pointer;" v-on:click="addSorter('sortByName')">Item</th>
               <th style="cursor: pointer;" v-on:click="addSorter('sortByDate')">Date</th>
               <th style="cursor: pointer;" v-on:click="addSorter('sortByTime')">Time</th>
-              <th>Completed</th>
+              <th style="cursor: pointer;" v-on:click="addSorter('sortByCompleted')">Completed</th>
               <th></th>
             </tr>
             <tr v-for="(value, index) in finalOutput">
@@ -191,48 +236,18 @@
       },
       getters: {
         allFilters: function(state){
-          var sorterFunctions = {
-            sortByName: function(todos) {
-              function compare(a, b) {
-                if (a.itemName < b.itemName)
-                  return -1;
-                if (a.itemName > b.itemName)
-                  return 1;
-                return 0;
-              }
-              return todos.sort(compare);
-            },
-            sortByTime: function(todos) {
-              function compare(a, b) {
-                if (a.time < b.time)
-                  return -1;
-                if (a.time > b.time)
-                  return 1;
-                return 0;
-              }
-              return todos.sort(compare);
-            },
-            sortByDate: function(todos) {
-              function compare(a, b) {
-                if (a.date < b.date)
-                  return -1;
-                if (a.date > b.date)
-                  return 1;
-                return 0;
-              }
-              return todos.sort(compare);
-            }
-          }
           var todos = filters[store.state.visibility](store.state.objects);
           store.state.sorters.forEach(function(sorter){
             console.log(sorter);
-            sorterFunctions[sorter](todos);
+            store.commit('sortTodos', {sorter, todos})
           })
           return todos;
         }
       },
       mutations: {
-        
+        sortTodos: function(state, value) {
+          sorterFunctions[value.sorter](value.todos);
+        },
         addSorter: function(state, value) {
           var index = store.state.sorters.indexOf(value);
           if(index != -1){
