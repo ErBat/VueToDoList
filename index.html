@@ -59,6 +59,12 @@
       }
     }
 
+    function searchFilter (todos, search){
+      return todos.filter(function(todo) {
+        return todo.itemName.includes(search);
+      })
+    }
+
     var sorterFunctions = {
       sortByName: function(todos) {
         function compare(a, b) {
@@ -129,6 +135,7 @@
           <li><a href="#/active" :class="{ selected: visibility == 'active' }">Active</a></li>
           <li><a href="#/completed" :class="{ selected: visibility == 'completed' }">Completed</a></li>
         </ul>
+        <label>Search:</label><input :value="searchValue" @input="updateSearch($event.target.value)">
         <table v-if="finalOutput.length">
             <tr>
               <th>Index</th>
@@ -151,10 +158,13 @@
       `,
       data() {
         return { 
-          visibility: store.state.visibility
+          visibility: store.state.visibility,
         }
       },
       computed: {
+        searchValue: function(){
+          return store.state.searchValue;
+        },
         finalOutput: function () {
           return store.getters.allFilters
         },
@@ -173,11 +183,13 @@
         }
       },
       methods: {
+        updateSearch: function(value){
+          store.commit('updateSearch', value);
+        },
         addSorter: function(value){
           store.commit('addSorter', value)
         },
         updateCompleted: function(event, value) {
-          console.log(value);
           var object = {checked: event.target.checked, value}
           store.commit('updateCompleted', object)
         },
@@ -199,52 +211,24 @@
     const store = new Vuex.Store({
       strict: true,
       state: {
-        //objects: todoStorage.fetch(),
-        objects: [{
-          itemName: "aaa",
-          date: "555",
-          time: "222",
-          completed: false
-        },
-        {
-          itemName: "bbb",
-          date: "444",
-          time: "222",
-          completed: false
-        },
-        {
-          itemName: "ccc",
-          date: "333",
-          time: "222",
-          completed: false
-        },
-        {
-          itemName: "ddd",
-          date: "222",
-          time: "222",
-          completed: false
-        },
-        {
-          itemName: "ggg",
-          date: "111",
-          time: "222",
-          completed: false
-        },
-        ],
-        visibility: "all",
+        objects: todoStorage.fetch(),
+        visibility: "",
+        searchValue: "",
         sorters: []
       },
       getters: {
         allFilters: function(state){
-          var todos = filters[store.state.visibility](store.state.objects);
+          var todos = searchFilter(filters[store.state.visibility](store.state.objects), store.state.searchValue);
           store.state.sorters.forEach(function(sorter){
-            console.log(sorter);
             store.commit('sortTodos', {sorter, todos})
           })
           return todos;
         }
       },
       mutations: {
+        updateSearch: function(state, value){
+          store.state.searchValue = value;
+        },
         sortTodos: function(state, value) {
           sorterFunctions[value.sorter](value.todos);
         },
