@@ -135,7 +135,7 @@
           <li><a href="#/active" :class="{ selected: visibility == 'active' }">Active</a></li>
           <li><a href="#/completed" :class="{ selected: visibility == 'completed' }">Completed</a></li>
         </ul>
-        <label>Search:</label><input :value="searchValue" @input="updateSearch($event.target.value)">
+        <label>Search:</label><input v-model="searchValue">
         <table v-if="finalOutput.length">
             <tr>
               <th>Index</th>
@@ -162,8 +162,13 @@
         }
       },
       computed: {
-        searchValue: function(){
-          return store.state.searchValue;
+        searchValue: {
+          get () {
+            return store.state.searchValue;
+          },
+          set (value){
+            store.commit('updateSearch', value);
+          }
         },
         finalOutput: function () {
           return store.getters.allFilters
@@ -183,9 +188,6 @@
         }
       },
       methods: {
-        updateSearch: function(value){
-          store.commit('updateSearch', value);
-        },
         addSorter: function(value){
           store.commit('addSorter', value)
         },
